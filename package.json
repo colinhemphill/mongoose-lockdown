@@ -1,0 +1,37 @@
+{
+  "name": "mongoose-lockdown",
+  "version": "0.0.1",
+  "description": "Mongoose plugin to lock down a field or object after a number of saves.",
+  "main": "mongoose-lockdown.js",
+  "scripts": {
+    "test": "grunt test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hemphillcc/mongoose-lockdown"
+  },
+  "keywords": [
+    "mongodb",
+    "mongoose",
+    "plugin",
+    "lock",
+    "save",
+    "prevent"
+  ],
+  "author": "Bomb Shelter Software",
+  "license": {
+    "type": "MIT",
+    "url": "https://github.com/hemphillcc/mongoose-lockdown/blob/master/LICENSE"
+  },
+  "dependencies": {
+    "async": "^1.0.0"
+  },
+  "devDependencies": {
+    "async": "*",
+    "grunt": "*",
+    "grunt-simple-mocha": "*",
+    "mocha": "^2.2.5",
+    "mongoose": "^4.0.4",
+    "should": "^6.0.3"
+  }
+}
