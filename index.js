@@ -7,9 +7,21 @@ var moment = require('moment');
 
 /* PLUGIN */
 
+var lockedFields = {};
+var pluginOptions;
+
 var lockdown = function(schema, options) {
-  var lockedFields = {};
   var paths = schema.paths;
+  pluginOptions = options ? options : {};
+
+  if (!paths.lockdown) {
+    schema.add({
+      lockdown: {
+        type: Object,
+        select: false
+      }
+    });
+  }
 
   // get options from schema declaration
   async.forEachOf(paths, function(value, fieldName, pathsCallback) {
@@ -19,7 +31,11 @@ var lockdown = function(schema, options) {
 
     // check for invalid lockdown param
     if (lockdownSetting) {
-      if (typeof lockdownSetting !== 'number') {
+      if (typeof lockdownSetting == 'number') {
+        if (lockdownSetting <= 0) {
+          return pathsCallback('Mongoose lockdown error: lockdown value on field \'' + fieldName + '\' must be greater than 0.');
+        }
+      } else {
         if (lockdownSetting !== true && lockdownSetting !== false) {
           return pathsCallback('Mongoose lockdown error: invalid lockdown value on field \'' + fieldName + '\'.');
         }
@@ -57,15 +73,19 @@ var lockdown = function(schema, options) {
     if (err) {
       return console.error(err);
     }
-    return;
   });
 
   // set up PRE SAVE hook
-  schema.pre('save', function(next) {
+  schema.pre('save', function(next, done) {
     var self = this;
     var todayMoment = moment.utc();
     var today = todayMoment.toDate();
-    async.forEachOf(lockedFields, function(value, fieldName, lockedFieldsCallback) {
+
+    if (!self.lockdown) {
+      self.lockdown = lockedFields;
+    }
+
+    async.forEachOf(self.lockdown, function(value, fieldName, lockedFieldsCallback) {
 
       // check for a reset
       if (!value.lastModified) {
@@ -89,6 +109,7 @@ var lockdown = function(schema, options) {
         var numberOfSaves = value.saves;
         if (numberOfSaves > maxSaves) {
           // prevent the update
+          return preventUpdate(self, value, fieldName, done);
         }
       }
 
@@ -97,11 +118,27 @@ var lockdown = function(schema, options) {
       if (err) {
         return console.error(err);
       }
-      console.log(lockedFields);
-      return next();
+      console.log(self);
+      done();
     });
+    next();
   });
 
 };
 
 module.exports = lockdown;
+
+/* HELPERS */
+
+function preventUpdate(self, value, fieldName, done) {
+  var message;
+  if (value.errorMessage) {
+    message = value.errorMessage;
+  } else if (pluginOptions.errorMessage) {
+    message = pluginOptions.errorMessage;
+  } else {
+    message = 'Error: \'' + fieldName + '\' has been locked from updates.';
+  }
+  self.invalidate(fieldName, message);
+  return done(new Error(message));
+}

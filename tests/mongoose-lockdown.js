@@ -13,11 +13,12 @@ mongoose.connection.on('error', function(err) {
 var LockdownTest = mongoose.model('LockdownTest', new Schema({
   name: String,
   username: {
-    type: String
+    type: String,
+    lockdown: true
   },
   email: {
     type: String,
-    lockdown: true,
+    lockdown: 5,
     lockdownReset: {
       length: 1,
       period: 'seconds'
@@ -28,10 +29,21 @@ var LockdownTest = mongoose.model('LockdownTest', new Schema({
 var user = new LockdownTest;
 user.name = 'Colin';
 user.username = 'bombsheltersoftware';
-user.email = 'colin@bombsheltersoftware.com';
-user.save();
+user.email = 'colin@bombshelter.com';
+user.save(function(err) {
+  if (err) {
+    console.error('Error on save 1.');
+    console.error(err);
+  }
+});
 
 setTimeout(function() {
   user.username = 'thebomb';
-  user.save();
+  user.email = 'colin@bombsheltersoftware.com';
+  user.save(function(err) {
+    if (err) {
+      console.error('Error on save 2.');
+      console.error(err);
+    }
+  });
 }, 1200);
