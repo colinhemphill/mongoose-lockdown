@@ -4,46 +4,85 @@ var mongoose = require('mongoose');
 var lockdown = require('..');
 var Schema = mongoose.Schema;
 
+// make database connection
 mongoose.connect('mongodb://localhost');
 mongoose.connection.on('error', function(err) {
   console.error('MongoDB error: ' + err.message);
-  console.error('Make sure a mongoDB server is running and accessible by this application')
+  console.error('Make sure a mongoDB server is running and accessible by this application.');
 });
 
-var LockdownTest = mongoose.model('LockdownTest', new Schema({
+// create an example schema
+var UserSchema = new Schema({
   name: String,
   username: {
     type: String,
-    lockdown: true
-  },
-  email: {
-    type: String,
-    lockdown: 5,
+    lockdown: true,
     lockdownReset: {
       length: 1,
       period: 'seconds'
     }
+  },
+  email: {
+    type: String,
+    lockdown: 3
   }
-}).plugin(lockdown));
+}).plugin(lockdown);
+var User = mongoose.model('User', UserSchema);
 
-var user = new LockdownTest;
-user.name = 'Colin';
-user.username = 'bombsheltersoftware';
-user.email = 'colin@bombshelter.com';
-user.save(function(err) {
-  if (err) {
-    console.error('Error on save 1.');
-    console.error(err);
-  }
-});
+describe('lockdown', function() {
 
-setTimeout(function() {
-  user.username = 'thebomb';
-  user.email = 'colin@bombsheltersoftware.com';
-  user.save(function(err) {
-    if (err) {
-      console.error('Error on save 2.');
-      console.error(err);
-    }
+  it('should not allow a save to the email', function(done) {
+    var user1 = new User({
+      name: 'Colin',
+      username: 'thebomb',
+      email: 'colin@thebomb.com'
+    });
+    user1.save(function(err) {
+      should.not.exist(err);
+      user1.email = 'colin@bombsheltersoftware.com';
+      user1.save(function(err) {
+        should.exist(err);
+        return done();
+      });
+    });
   });
-}, 1200);
+
+  it('should allow a save to the username because the reset time period has passed', function(done) {
+    var user2 = new User({
+      name: 'Colin',
+      username: 'thebomb',
+      email: 'colin@thebomb.com'
+    });
+    user2.save(function(err) {
+      should.not.exist(err);
+      setTimeout(function() {
+        user2.username = 'bombsheltersoftware';
+        user2.save(function(err) {
+          should.not.exist(err);
+          return done();
+        });
+      }, 1200);
+    });
+  });
+
+  it('should allow two saves on email then prevent the third', function(done) {
+    var user3 = new User({
+      name: 'Colin',
+      username: 'thebomb',
+      email: 'colin+1@bombsheltersoftware.com'
+    });
+    user3.save(function(err) {
+      should.not.exist(err);
+      user3.email = 'colin+2@bombsheltersoftware.com';
+      user3.save(function(err) {
+        should.not.exist(err);
+        user3.email = 'colin+3@bombsheltersoftware.com';
+        user3.save(function(err) {
+          should.exist(err);
+          return done();
+        });
+      });
+    });
+  });
+
+});

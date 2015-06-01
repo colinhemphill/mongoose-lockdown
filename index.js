@@ -4,6 +4,7 @@
 
 var async = require('async');
 var moment = require('moment');
+var clone = require('clone');
 
 /* PLUGIN */
 
@@ -30,7 +31,7 @@ var lockdown = function(schema, options) {
     var resetOptions = fieldOptions.lockdownReset;
 
     // check for invalid lockdown param
-    if (lockdownSetting) {
+    if (lockdownSetting !== undefined) {
       if (typeof lockdownSetting == 'number') {
         if (lockdownSetting <= 0) {
           return pathsCallback('Mongoose lockdown error: lockdown value on field \'' + fieldName + '\' must be greater than 0.');
@@ -64,7 +65,7 @@ var lockdown = function(schema, options) {
     } else if (typeof lockdownSetting === 'number') {
       lockedFields[fieldName] = {
         saves: 0,
-        max: fieldOptions.lockdown,
+        max: lockdownSetting,
         reset: resetOptions
       }
     }
@@ -82,10 +83,12 @@ var lockdown = function(schema, options) {
     var today = todayMoment.toDate();
 
     if (!self.lockdown) {
-      self.lockdown = lockedFields;
+      self.lockdown = clone(lockedFields);
     }
 
     async.forEachOf(self.lockdown, function(value, fieldName, lockedFieldsCallback) {
+
+      if (!self.isModified(fieldName)) return next();
 
       // check for a reset
       if (!value.lastModified) {
@@ -102,6 +105,7 @@ var lockdown = function(schema, options) {
 
       // we only care if a locked field is modified
       var fieldModified = self.isModified(fieldName);
+      console.log(fieldName, 'isModified::', fieldModified);
       if (fieldModified) {
         value.saves++;
         value.lastModified = today;
@@ -116,9 +120,8 @@ var lockdown = function(schema, options) {
       return lockedFieldsCallback();
     }, function(err) {
       if (err) {
-        return console.error(err);
+        return done(new Error(err));
       }
-      console.log(self);
       done();
     });
     next();
