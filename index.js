@@ -77,7 +77,7 @@ var lockdown = function(schema, options) {
   });
 
   // set up PRE SAVE hook
-  schema.pre('save', function(next, done) {
+  schema.pre('save', function(next) {
     var self = this;
     var todayMoment = moment.utc();
     var today = todayMoment.toDate();
@@ -87,8 +87,6 @@ var lockdown = function(schema, options) {
     }
 
     async.forEachOf(self.lockdown, function(value, fieldName, lockedFieldsCallback) {
-
-      if (!self.isModified(fieldName)) return next();
 
       // check for a reset
       if (!value.lastModified) {
@@ -103,26 +101,27 @@ var lockdown = function(schema, options) {
         }
       }
 
+      // update lockdown values
       // we only care if a locked field is modified
-      var fieldModified = self.isModified(fieldName);
-      console.log(fieldName, 'isModified::', fieldModified);
-      if (fieldModified) {
-        value.saves++;
-        value.lastModified = today;
-        var maxSaves = value.max;
-        var numberOfSaves = value.saves;
-        if (numberOfSaves > maxSaves) {
-          // prevent the update
-          return preventUpdate(self, value, fieldName, done);
-        }
+      if (!self.isModified(fieldName)) return lockedFieldsCallback();
+      value.saves++;
+      value.lastModified = today;
+
+      // if the doc is new, don't need to check for lockdown
+      if (self.isNew) return lockedFieldsCallback();
+
+      var maxSaves = value.max;
+      var numberOfSaves = value.saves;
+      if (numberOfSaves > maxSaves) {
+        // prevent the update
+        return preventUpdate(self, value, fieldName, next);
       }
 
       return lockedFieldsCallback();
     }, function(err) {
       if (err) {
-        return done(new Error(err));
+        return next(new Error(err));
       }
-      done();
     });
     next();
   });

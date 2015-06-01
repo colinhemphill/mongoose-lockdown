@@ -13,7 +13,14 @@ mongoose.connection.on('error', function(err) {
 
 // create an example schema
 var UserSchema = new Schema({
-  name: String,
+  name: {
+    type: String,
+    lockdown: true
+  },
+  email: {
+    type: String,
+    lockdown: 2
+  },
   username: {
     type: String,
     lockdown: true,
@@ -21,25 +28,21 @@ var UserSchema = new Schema({
       length: 1,
       period: 'seconds'
     }
-  },
-  email: {
-    type: String,
-    lockdown: 3
   }
 }).plugin(lockdown);
 var User = mongoose.model('User', UserSchema);
 
 describe('lockdown', function() {
 
-  it('should not allow a save to the email', function(done) {
+  it('should not allow a save to the name', function(done) {
     var user1 = new User({
-      name: 'Colin',
+      name: 'bombsheltersoftware',
       username: 'thebomb',
       email: 'colin@thebomb.com'
     });
     user1.save(function(err) {
       should.not.exist(err);
-      user1.email = 'colin@bombsheltersoftware.com';
+      user1.name = 'Colin';
       user1.save(function(err) {
         should.exist(err);
         return done();
