@@ -24,7 +24,8 @@
     "url": "https://github.com/hemphillcc/mongoose-lockdown/blob/master/LICENSE"
   },
   "dependencies": {
-    "async": "^1.0.0"
+    "async": "^1.0.0",
+    "moment": "^2.10.3"
   },
   "devDependencies": {
     "async": "*",
