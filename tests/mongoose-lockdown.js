@@ -13,14 +13,15 @@ mongoose.connection.on('error', function(err) {
 var LockdownTest = mongoose.model('LockdownTest', new Schema({
   name: String,
   username: {
-    type: String,
-    lockdown: 2
+    type: String
   },
   email: {
     type: String,
     lockdown: true,
-    lockdownResetAfter: 2,
-    lockdownResetPeriod: 'days'
+    lockdownReset: {
+      length: 1,
+      period: 'seconds'
+    }
   }
 }).plugin(lockdown));
 
@@ -29,3 +30,8 @@ user.name = 'Colin';
 user.username = 'bombsheltersoftware';
 user.email = 'colin@bombsheltersoftware.com';
 user.save();
+
+setTimeout(function() {
+  user.username = 'thebomb';
+  user.save();
+}, 1200);

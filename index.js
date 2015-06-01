@@ -14,15 +14,42 @@ var lockdown = function(schema, options) {
   // get options from schema declaration
   async.forEachOf(paths, function(value, fieldName, pathsCallback) {
     var fieldOptions = value.options;
-    if (fieldOptions.lockdown === true) {
+    var lockdownSetting = fieldOptions.lockdown;
+    var resetOptions = fieldOptions.lockdownReset;
+
+    // check for invalid lockdown param
+    if (lockdownSetting) {
+      if (typeof lockdownSetting !== 'number') {
+        if (lockdownSetting !== true && lockdownSetting !== false) {
+          return pathsCallback('Mongoose lockdown error: invalid lockdown value on field \'' + fieldName + '\'.');
+        }
+      }
+    }
+
+    // check for invalid reset options
+    if (resetOptions) {
+      if (!resetOptions.length) {
+        return pathsCallback('Mongoose lockdown error: no length defined for reset options on field \'' + fieldName + '\'.');
+      } else if (typeof resetOptions.length !== 'number') {
+        return pathsCallback('Mongoose lockdown error: invalid length defined for reset options on field \'' + fieldName + '\'.');
+      } else if (!resetOptions.period) {
+        return pathsCallback('Mongoose lockdown error: no period defined for reset options on field \'' + fieldName + '\'.');
+      } else if (typeof resetOptions.period !== 'string') {
+        return pathsCallback('Mongoose lockdown error: invalid period defined for reset options on field \'' + fieldName + '\'.');
+      }
+    }
+
+    if (lockdownSetting === true) {
       lockedFields[fieldName] = {
         saves: 0,
-        max: 1
+        max: 1,
+        reset: resetOptions
       };
-    } else if (typeof fieldOptions.lockdown === 'number') {
+    } else if (typeof lockdownSetting === 'number') {
       lockedFields[fieldName] = {
         saves: 0,
-        max: fieldOptions.lockdown
+        max: fieldOptions.lockdown,
+        reset: resetOptions
       }
     }
     return pathsCallback();
@@ -36,16 +63,33 @@ var lockdown = function(schema, options) {
   // set up PRE SAVE hook
   schema.pre('save', function(next) {
     var self = this;
+    var todayMoment = moment.utc();
+    var today = todayMoment.toDate();
     async.forEachOf(lockedFields, function(value, fieldName, lockedFieldsCallback) {
-      var fieldModified = self.isModified(fieldName);
 
-      if (fieldModified) {
-        lockedFields[fieldName].saves++;
+      // check for a reset
+      if (!value.lastModified) {
+        value.lastModified = today;
       }
-      var maxSaves = lockedFields[fieldName].max;
-      var numberOfSaves = lockedFields[fieldName].saves;
-      if (numberOfSaves > maxSaves) {
-        // prevent the update
+      var lastModifiedMoment = moment.utc(value.lastModified);
+      var lockdownReset = value.reset;
+      if (lockdownReset) {
+        var resetDiff = todayMoment.diff(lastModifiedMoment, lockdownReset.period);
+        if (resetDiff >= lockdownReset.length) {
+          value.saves = 0;
+        }
+      }
+
+      // we only care if a locked field is modified
+      var fieldModified = self.isModified(fieldName);
+      if (fieldModified) {
+        value.saves++;
+        value.lastModified = today;
+        var maxSaves = value.max;
+        var numberOfSaves = value.saves;
+        if (numberOfSaves > maxSaves) {
+          // prevent the update
+        }
       }
 
       return lockedFieldsCallback();
@@ -53,6 +97,7 @@ var lockdown = function(schema, options) {
       if (err) {
         return console.error(err);
       }
+      console.log(lockedFields);
       return next();
     });
   });
