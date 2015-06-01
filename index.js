@@ -88,6 +88,7 @@ var lockdown = function(schema, options) {
     if (!self.lockdown) {
       self.lockdown = clone(lockedFields);
     }
+    console.log(self.lockdown)
 
     async.forEachOf(self.lockdown, function(value, fieldName, lockedFieldsCallback) {
 

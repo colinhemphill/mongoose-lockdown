@@ -29,7 +29,14 @@ var UserSchema = new Schema({
       length: 1,
       period: 'seconds'
     }
-  }
+  },
+  posts: [{
+    title: {
+      type: String,
+      lockdown: true,
+      lockdownDirect: true
+    }
+  }]
 }).plugin(lockdown);
 var User = mongoose.model('User', UserSchema);
 
@@ -87,6 +94,27 @@ describe('lockdown', function() {
           should.exist(err);
           return done();
         });
+      });
+    });
+  });
+
+  it('should allow changes to posts, but not post titles', function(done) {
+    var user4 = new User({
+      name: 'bombsheltersoftware',
+      username: 'thebomb',
+      email: 'colin@thebomb.com',
+      posts: [{
+        title: 'First Post'
+      }]
+    });
+    user4.save(function(err) {
+      should.not.exist(err);
+      user4.posts.push({
+        title: 'My Second Post'
+      });
+      user4.save(function(err) {
+        should.not.exist(err);
+        return done();
       });
     });
   });
