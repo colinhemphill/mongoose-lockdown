@@ -29,6 +29,7 @@ var lockdown = function(schema, options) {
     var fieldOptions = value.options;
     var lockdownSetting = fieldOptions.lockdown;
     var resetOptions = fieldOptions.lockdownReset;
+    var errorMessage = fieldOptions.lockdownMessage;
 
     // check for invalid lockdown param
     if (lockdownSetting !== undefined) {
@@ -60,13 +61,15 @@ var lockdown = function(schema, options) {
       lockedFields[fieldName] = {
         saves: 0,
         max: 1,
-        reset: resetOptions
+        reset: resetOptions,
+        errorMessage: errorMessage
       };
     } else if (typeof lockdownSetting === 'number') {
       lockedFields[fieldName] = {
         saves: 0,
         max: lockdownSetting,
-        reset: resetOptions
+        reset: resetOptions,
+        errorMessage: errorMessage
       }
     }
     return pathsCallback();
@@ -132,15 +135,15 @@ module.exports = lockdown;
 
 /* HELPERS */
 
-function preventUpdate(self, value, fieldName, done) {
+function preventUpdate(self, value, fieldName, next) {
   var message;
   if (value.errorMessage) {
     message = value.errorMessage;
   } else if (pluginOptions.errorMessage) {
     message = pluginOptions.errorMessage;
   } else {
-    message = 'Error: \'' + fieldName + '\' has been locked from updates.';
+    message = 'Error: \'' + fieldName + '\' has been locked.';
   }
   self.invalidate(fieldName, message);
-  return done(new Error(message));
+  return next(new Error(message));
 }

@@ -19,7 +19,8 @@ var UserSchema = new Schema({
   },
   email: {
     type: String,
-    lockdown: 2
+    lockdown: 2,
+    lockdownMessage: 'TOO MANY EMAIL DUDE'
   },
   username: {
     type: String,
@@ -81,6 +82,8 @@ describe('lockdown', function() {
         should.not.exist(err);
         user3.email = 'colin+3@bombsheltersoftware.com';
         user3.save(function(err) {
+          console.log('\tSave prevented on email field. Should be a custom error message:');
+          console.error('\t' + err);
           should.exist(err);
           return done();
         });

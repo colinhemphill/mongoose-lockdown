@@ -77,12 +77,27 @@ In the above, ``username`` cannot be changed in a given document for a period of
 
 In this example, as soon as ``user`` is first created, both ``username`` and ``email`` have been saved once. Since the max saves on ``username`` is ``1``, lockdown will prevent any further changes to that field. If we attempted to change the ``email`` a couple times, the changes would go through until the number of saves reached ``3``. However, if we waited until 30 days after the most recent save, the lockdown would reset, and saves would go through again. The reset would re-initialize the field so that again, only 3 saves could be performed before a reset is needed.
 
+## Custom Error Messages
+
+A locked field will cause the save to fail, and we send back a Mongoose error which looks like this:
+
+    Error: FIELDNAME has been locked.
+
+If you want to send your users something more appropriate, like a less terrible, non present perfect voice, you can declare a custom message on the lockdown fields:
+
+    username: {
+      type: String,
+      lockdown: true,
+      lockdownMessage: 'You cannot change your username at this time.'
+    }
+
 ## Future Development
 
 This plugin currently only works for Mongoose ``save()``, which is not triggered during queries such as ``update()`` and ``findOneAndUpdate()``. Mongoose 4.0 added distinct hooks for these queries, so we hope to add support for locking those types of updates shortly.
 
 ## Version History
 
+* 0.1.1 Supports custom error messages, like it should have to begin with.
 * 0.1.0 Initial release.
 
 [license-image]: http://img.shields.io/badge/license-MIT-blue.svg?style=flat-square
