@@ -16,7 +16,7 @@ Require the plugin like so:
 
     var lockdown = require('mongoose-lockdown');
 
-Then attack it to a schema declaration with ``.plugin(lockdown)``.
+Then attach it to a schema declaration with ``.plugin(lockdown)``.
 
 In your schema, indicate which fields should be locked down by giving the fields a ``lockdown: maxNumberOfSaves`` option:
 
@@ -25,7 +25,7 @@ In your schema, indicate which fields should be locked down by giving the fields
       lockdown: 3
     }
 
-Using ``lockdown: true`` defaults to 1 save maximum. When a document is first created and a field is declared, this counts as the first save on that field. In other words, the default ``lockdown: 1`` will prevent any further changes to a field after that field is added to a document.
+Using ``lockdown: true`` defaults to a 1 save maximum. When a document is first created and a field is declared, this counts as the first save on that field. In other words, the default ``lockdown: 1`` will prevent any further changes to a field after that field is added to a document.
 
 ## Resets
 
@@ -61,6 +61,7 @@ In the above, ``username`` cannot be changed in a given document for a period of
         }
       }
     }).plugin(lockdown);
+    var User = mongoose.model('User', UserSchema);
 
     var user = new User({
       name: 'Colin',
@@ -75,7 +76,7 @@ In the above, ``username`` cannot be changed in a given document for a period of
       });
     });
 
-In this example, as soon as ``user`` is first created, both ``username`` and ``email`` have been saved once. Since the max saves on ``username`` is ``1``, lockdown will prevent any further changes to that field. If we attempted to change the ``email`` a couple times, the changes would go through until the number of saves reached ``3``. However, if we waited until 30 days after the most recent save, the lockdown would reset, and saves would go through again. The reset would re-initialize the field so that again, only 3 saves could be performed before a reset is needed.
+In this example, as soon as ``user`` is first created, both ``username`` and ``email`` have been saved once. Since the max saves on ``username`` is ``1``, lockdown will prevent any further changes to that field. If we attempt to change the ``email`` multiple times, the changes will go through until the number of saves reaches ``3``. If we wait until 30 days after the most recent save, the lockdown will reset, and saves will go through again. The reset will re-initialize the field so that, again, only 3 saves can be performed before another reset is needed.
 
 ## Custom Error Messages
 
