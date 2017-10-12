@@ -5,6 +5,7 @@
 var async = require('async');
 var moment = require('moment');
 var clone = require('clone');
+var uuid = require('uuid/v4')();
 
 /* PLUGIN */
 
@@ -58,14 +59,14 @@ var lockdown = function(schema, options) {
     }
 
     if (lockdownSetting === true) {
-      lockedFields[fieldName] = {
+      lockedFields[fieldName.replace('.', uuid)] = {
         saves: 0,
         max: 1,
         reset: resetOptions,
         errorMessage: errorMessage
       };
     } else if (typeof lockdownSetting === 'number') {
-      lockedFields[fieldName] = {
+      lockedFields[fieldName.replace('.', uuid)] = {
         saves: 0,
         max: lockdownSetting,
         reset: resetOptions,
@@ -91,6 +92,7 @@ var lockdown = function(schema, options) {
     console.log(self.lockdown)
 
     async.forEachOf(self.lockdown, function(value, fieldName, lockedFieldsCallback) {
+      fieldName = fieldName.replace(uuid, '.');
 
       // check for a reset
       if (!value.lastModified) {
