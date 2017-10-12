@@ -30,6 +30,12 @@ var UserSchema = new Schema({
       period: 'seconds'
     }
   },
+  outter: {
+    inner: {
+      type: String,
+      lockdown: true
+    }
+  },
   posts: [{
     title: {
       type: String,
@@ -119,4 +125,25 @@ describe('lockdown', function() {
     });
   });
 
+  it('should not allow a save to an inner field', function(done) {
+    var user5 = new User({
+      name: 'bombsheltersoftware',
+      username: 'thebomb',
+      email: 'colin@thebomb.com',
+      outter: {
+        inner: 'i blew up before we supported `.`s in fieldname'
+      },
+      posts: [{
+        title: 'First Post'
+      }]
+    });
+    user5.save(function(err) {
+      should.not.exist(err);
+      user5.outter.inner = 'new val';
+      user5.save(function(err) {
+        should.exist(err);
+        return done();
+      });
+    });
+  });
 });
