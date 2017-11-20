@@ -98,6 +98,7 @@ This plugin currently only works for Mongoose ``save()``, which is not triggered
 
 ## Version History
 
+* 0.1.2 Supports paths with `.` in them. [#2]
 * 0.1.1 Supports custom error messages, like it should have to begin with.
 * 0.1.0 Initial release.
 
