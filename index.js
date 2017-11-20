@@ -5,6 +5,8 @@
 var async = require('async');
 var moment = require('moment');
 var clone = require('clone');
+// uuid must be shared among all module instances, so hard-code it:
+var uuid = 'ee0fedeb-e9b3-4690-8134-812f6d5ead28';
 
 /* PLUGIN */
 
@@ -58,14 +60,14 @@ var lockdown = function(schema, options) {
     }
 
     if (lockdownSetting === true) {
-      lockedFields[fieldName] = {
+      lockedFields[fieldName.replace('.', uuid)] = {
         saves: 0,
         max: 1,
         reset: resetOptions,
         errorMessage: errorMessage
       };
     } else if (typeof lockdownSetting === 'number') {
-      lockedFields[fieldName] = {
+      lockedFields[fieldName.replace('.', uuid)] = {
         saves: 0,
         max: lockdownSetting,
         reset: resetOptions,
@@ -91,6 +93,7 @@ var lockdown = function(schema, options) {
     console.log(self.lockdown)
 
     async.forEachOf(self.lockdown, function(value, fieldName, lockedFieldsCallback) {
+      fieldName = fieldName.replace(uuid, '.');
 
       // check for a reset
       if (!value.lastModified) {
