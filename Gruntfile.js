@@ -5,12 +5,12 @@ module.exports = function(grunt) {
     simplemocha: {
       options: {
         timeout: 3000,
-        ignoreLeaks: true
+        ignoreLeaks: true,
       },
       all: {
-        src: ['tests/*.js']
-      }
-    }
+        src: ['tests/*.js'],
+      },
+    },
   });
 
   // load tasks

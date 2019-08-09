@@ -8,51 +8,54 @@ var Schema = mongoose.Schema;
 mongoose.connect('mongodb://localhost');
 mongoose.connection.on('error', function(err) {
   console.error('MongoDB error: ' + err.message);
-  console.error('Make sure a mongoDB server is running and accessible by this application.');
+  console.error(
+    'Make sure a mongoDB server is running and accessible by this application.',
+  );
 });
 
 // create an example schema
 var UserSchema = new Schema({
   name: {
     type: String,
-    lockdown: true
+    lockdown: true,
   },
   email: {
     type: String,
     lockdown: 2,
-    lockdownMessage: 'TOO MANY EMAIL DUDE'
+    lockdownMessage: 'TOO MANY EMAIL DUDE',
   },
   username: {
     type: String,
     lockdown: true,
     lockdownReset: {
       length: 1,
-      period: 'seconds'
-    }
+      period: 'seconds',
+    },
   },
   outter: {
     inner: {
       type: String,
-      lockdown: true
-    }
-  },
-  posts: [{
-    title: {
-      type: String,
       lockdown: true,
-      lockdownDirect: true
-    }
-  }]
+    },
+  },
+  posts: [
+    {
+      title: {
+        type: String,
+        lockdown: true,
+        lockdownDirect: true,
+      },
+    },
+  ],
 }).plugin(lockdown);
 var User = mongoose.model('User', UserSchema);
 
 describe('lockdown', function() {
-
   it('should not allow a save to the name', function(done) {
     var user1 = new User({
       name: 'bombsheltersoftware',
       username: 'thebomb',
-      email: 'colin@thebomb.com'
+      email: 'colin@thebomb.com',
     });
     user1.save(function(err) {
       should.not.exist(err);
@@ -68,7 +71,7 @@ describe('lockdown', function() {
     var user2 = new User({
       name: 'Colin',
       username: 'thebomb',
-      email: 'colin@thebomb.com'
+      email: 'colin@thebomb.com',
     });
     user2.save(function(err) {
       should.not.exist(err);
@@ -86,7 +89,7 @@ describe('lockdown', function() {
     var user3 = new User({
       name: 'Colin',
       username: 'thebomb',
-      email: 'colin+1@bombsheltersoftware.com'
+      email: 'colin+1@bombsheltersoftware.com',
     });
     user3.save(function(err) {
       should.not.exist(err);
@@ -95,7 +98,9 @@ describe('lockdown', function() {
         should.not.exist(err);
         user3.email = 'colin+3@bombsheltersoftware.com';
         user3.save(function(err) {
-          console.log('\tSave prevented on email field. Should be a custom error message:');
+          console.log(
+            '\tSave prevented on email field. Should be a custom error message:',
+          );
           console.error('\t' + err);
           should.exist(err);
           return done();
@@ -109,14 +114,16 @@ describe('lockdown', function() {
       name: 'bombsheltersoftware',
       username: 'thebomb',
       email: 'colin@thebomb.com',
-      posts: [{
-        title: 'First Post'
-      }]
+      posts: [
+        {
+          title: 'First Post',
+        },
+      ],
     });
     user4.save(function(err) {
       should.not.exist(err);
       user4.posts.push({
-        title: 'My Second Post'
+        title: 'My Second Post',
       });
       user4.save(function(err) {
         should.not.exist(err);
@@ -131,11 +138,13 @@ describe('lockdown', function() {
       username: 'thebomb',
       email: 'colin@thebomb.com',
       outter: {
-        inner: 'i blew up before we supported `.`s in fieldname'
+        inner: 'i blew up before we supported `.`s in fieldname',
       },
-      posts: [{
-        title: 'First Post'
-      }]
+      posts: [
+        {
+          title: 'First Post',
+        },
+      ],
     });
     user5.save(function(err) {
       should.not.exist(err);

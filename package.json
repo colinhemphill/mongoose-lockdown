@@ -1,6 +1,6 @@
 {
   "name": "mongoose-lockdown",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Mongoose plugin to lock down a field or object after a number of saves.",
   "main": "mongoose-lockdown.js",
   "scripts": {
