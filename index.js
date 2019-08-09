@@ -1,20 +1,17 @@
-'use-strict';
+// MODULES
+const async = require('async');
+const moment = require('moment');
+const clone = require('clone');
 
-/* REQUIREMENTS */
+// CONSTANTS
+const uuid = 'ee0fedeb-e9b3-4690-8134-812f6d5ead28';
 
-var async = require('async');
-var moment = require('moment');
-var clone = require('clone');
-// uuid must be shared among all module instances, so hard-code it:
-var uuid = 'ee0fedeb-e9b3-4690-8134-812f6d5ead28';
+// PLUGIN
+const lockedFields = {};
+const pluginOptions;
 
-/* PLUGIN */
-
-var lockedFields = {};
-var pluginOptions;
-
-var lockdown = function(schema, options) {
-  var paths = schema.paths;
+const lockdown = function(schema, options) {
+  const paths = schema.paths;
   pluginOptions = options ? options : {};
 
   if (!paths.lockdown) {
@@ -30,10 +27,10 @@ var lockdown = function(schema, options) {
   async.forEachOf(
     paths,
     function(value, fieldName, pathsCallback) {
-      var fieldOptions = value.options;
-      var lockdownSetting = fieldOptions.lockdown;
-      var resetOptions = fieldOptions.lockdownReset;
-      var errorMessage = fieldOptions.lockdownMessage;
+      const fieldOptions = value.options;
+      const lockdownSetting = fieldOptions.lockdown;
+      const resetOptions = fieldOptions.lockdownReset;
+      const errorMessage = fieldOptions.lockdownMessage;
 
       // check for invalid lockdown param
       if (lockdownSetting !== undefined) {
@@ -111,9 +108,9 @@ var lockdown = function(schema, options) {
 
   // set up PRE SAVE hook
   schema.pre('save', function(next) {
-    var self = this;
-    var todayMoment = moment.utc();
-    var today = todayMoment.toDate();
+    const self = this;
+    const todayMoment = moment.utc();
+    const today = todayMoment.toDate();
 
     if (!self.lockdown) {
       self.lockdown = clone(lockedFields);
@@ -128,10 +125,10 @@ var lockdown = function(schema, options) {
         if (!value.lastModified) {
           value.lastModified = today;
         }
-        var lastModifiedMoment = moment.utc(value.lastModified);
-        var lockdownReset = value.reset;
+        const lastModifiedMoment = moment.utc(value.lastModified);
+        const lockdownReset = value.reset;
         if (lockdownReset) {
-          var resetDiff = todayMoment.diff(
+          const resetDiff = todayMoment.diff(
             lastModifiedMoment,
             lockdownReset.period,
           );
@@ -149,8 +146,8 @@ var lockdown = function(schema, options) {
         // if the doc is new, don't need to check for lockdown
         if (self.isNew) return lockedFieldsCallback();
 
-        var maxSaves = value.max;
-        var numberOfSaves = value.saves;
+        const maxSaves = value.max;
+        const numberOfSaves = value.saves;
         if (numberOfSaves > maxSaves) {
           // prevent the update
           return preventUpdate(self, value, fieldName, next);
@@ -173,7 +170,7 @@ module.exports = lockdown;
 /* HELPERS */
 
 function preventUpdate(self, value, fieldName, next) {
-  var message;
+  let message;
   if (value.errorMessage) {
     message = value.errorMessage;
   } else if (pluginOptions.errorMessage) {
