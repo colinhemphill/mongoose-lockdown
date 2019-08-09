@@ -1,20 +1,23 @@
-var mocha = require('mocha');
-var should = require('should');
-var mongoose = require('mongoose');
-var lockdown = require('..');
-var Schema = mongoose.Schema;
+require('mocha');
+const should = require('should');
+const mongoose = require('mongoose');
+const lockdown = require('..');
+const Schema = mongoose.Schema;
 
 // make database connection
-mongoose.connect('mongodb://localhost');
+mongoose.connect('mongodb://localhost', {
+  useNewUrlParser: true,
+  useMongoClient: true,
+});
 mongoose.connection.on('error', function(err) {
-  console.error('MongoDB error: ' + err.message);
   console.error(
     'Make sure a mongoDB server is running and accessible by this application.',
   );
+  throw err;
 });
 
 // create an example schema
-var UserSchema = new Schema({
+const UserSchema = new Schema({
   name: {
     type: String,
     lockdown: true,
@@ -48,11 +51,12 @@ var UserSchema = new Schema({
     },
   ],
 }).plugin(lockdown);
-var User = mongoose.model('User', UserSchema);
+
+const User = mongoose.model('User', UserSchema);
 
 describe('lockdown', function() {
   it('should not allow a save to the name', function(done) {
-    var user1 = new User({
+    const user1 = new User({
       name: 'bombsheltersoftware',
       username: 'thebomb',
       email: 'colin@thebomb.com',
@@ -68,7 +72,7 @@ describe('lockdown', function() {
   });
 
   it('should allow a save to the username because the reset time period has passed', function(done) {
-    var user2 = new User({
+    const user2 = new User({
       name: 'Colin',
       username: 'thebomb',
       email: 'colin@thebomb.com',
@@ -86,7 +90,7 @@ describe('lockdown', function() {
   });
 
   it('should allow two saves on email then prevent the third', function(done) {
-    var user3 = new User({
+    const user3 = new User({
       name: 'Colin',
       username: 'thebomb',
       email: 'colin+1@bombsheltersoftware.com',
@@ -110,21 +114,24 @@ describe('lockdown', function() {
   });
 
   it('should allow changes to posts, but not post titles', function(done) {
-    var user4 = new User({
+    let posts = [
+      {
+        title: 'First Post',
+      },
+    ];
+    const user4 = new User({
       name: 'bombsheltersoftware',
       username: 'thebomb',
       email: 'colin@thebomb.com',
-      posts: [
-        {
-          title: 'First Post',
-        },
-      ],
+      posts: posts,
     });
     user4.save(function(err) {
       should.not.exist(err);
-      user4.posts.push({
-        title: 'My Second Post',
-      });
+      posts = posts.concat([
+        {
+          title: 'My Second Post',
+        },
+      ]);
       user4.save(function(err) {
         should.not.exist(err);
         return done();
@@ -133,7 +140,7 @@ describe('lockdown', function() {
   });
 
   it('should not allow a save to an inner field', function(done) {
-    var user5 = new User({
+    const user5 = new User({
       name: 'bombsheltersoftware',
       username: 'thebomb',
       email: 'colin@thebomb.com',

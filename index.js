@@ -7,8 +7,8 @@ const clone = require('clone');
 const uuid = 'ee0fedeb-e9b3-4690-8134-812f6d5ead28';
 
 // PLUGIN
-const lockedFields = {};
-const pluginOptions;
+let lockedFields = {};
+let pluginOptions;
 
 const lockdown = function(schema, options) {
   const paths = schema.paths;
