@@ -34,7 +34,7 @@
     "grunt": "*",
     "grunt-simple-mocha": "*",
     "mocha": "^2.2.5",
-    "mongoose": "^4.0.4",
+    "mongoose": "^5.7.5",
     "should": "^6.0.3"
   }
 }
